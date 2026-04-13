@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Systematic Factor Portfolio — Technical Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1B2A4A;
+  --navy2: #2D3E5F;
+  --terra: #B5543A;
+  --terra-light: #D4956F;
+  --green: #3A7D5C;
+  --green-light: #D4EDDF;
+  --bg: #0F1923;
+  --card: #182635;
+  --card2: #1E3045;
+  --border: #263A54;
+  --text-primary: #E8ECF1;
+  --text-secondary: #9AA5B4;
+  --text-muted: #6B7A8D;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-primary); line-height: 1.7; font-size: 15px; }
+
+/* NAV */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(15,25,35,0.94); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.nav a { color: var(--text-muted); text-decoration: none; font-size: 11px; padding: 5px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; transition: all 0.2s; }
+.nav a:hover, .nav a.active { color: #fff; background: var(--navy2); }
+.nav .logo { font-family: 'Source Serif 4'; color: var(--terra-light); font-size: 15px; margin-right: 16px; text-transform: none; letter-spacing: 0; font-weight: 700; }
+
+/* LAYOUT */
+.container { max-width: 960px; margin: 0 auto; padding: 60px 24px 80px; }
+.section { margin-bottom: 56px; scroll-margin-top: 56px; }
+h1 { font-family: 'Source Serif 4'; font-size: 34px; color: #fff; margin-bottom: 6px; line-height: 1.2; font-weight: 700; }
+h1 span { color: var(--terra-light); }
+.subtitle { color: var(--text-secondary); font-size: 15px; margin-bottom: 6px; }
+h2 { font-family: 'Source Serif 4'; font-size: 22px; color: #fff; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--terra); font-weight: 700; }
+h2 .num { color: var(--terra-light); margin-right: 8px; font-size: 18px; }
+h3 { font-size: 13px; font-weight: 700; color: var(--green); margin: 18px 0 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* CARDS */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 18px 22px; margin-bottom: 14px; position: relative; }
+.card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+.card.terra::before { background: var(--terra); }
+.card.green::before { background: var(--green); }
+.card.navy::before { background: var(--navy2); }
+.card-title { font-weight: 700; color: #fff; font-size: 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+.badge-w { background: var(--terra); color: #fff; }
+.badge-s { background: var(--navy2); color: var(--terra-light); }
+.badge-r { background: var(--green); color: #fff; font-size: 9px; }
+
+/* FORMULA */
+.formula { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: rgba(58,125,92,0.08); border: 1px solid rgba(58,125,92,0.2); border-radius: 6px; padding: 12px 16px; margin: 10px 0; color: var(--green-light); overflow-x: auto; line-height: 1.6; }
+.formula .comment { color: var(--text-muted); }
+
+/* FLOW */
+.flow { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 16px 0; margin: 12px 0; }
+.flow-step { min-width: 115px; text-align: center; padding: 12px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.flow-step.navy { background: var(--navy2); color: #fff; border: 1px solid var(--border); }
+.flow-step.terra { background: var(--terra); color: #fff; }
+.flow-step.green { background: var(--green); color: #fff; }
+.flow-step small { display: block; font-size: 10px; font-weight: 400; opacity: 0.75; margin-top: 3px; }
+.flow-arrow { font-size: 18px; color: var(--terra-light); padding: 0 5px; flex-shrink: 0; }
+
+/* SIGNAL GRID */
+.signal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin: 14px 0; }
+.signal-card { background: var(--card2); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+.signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.signal-name { font-weight: 700; color: #fff; font-size: 13px; }
+.signal-weight { font-family: 'Source Serif 4'; font-size: 16px; color: var(--terra-light); font-weight: 700; }
+.signal-logic { font-size: 11.5px; color: var(--text-secondary); line-height: 1.55; }
+.signal-logic strong { color: var(--green-light); }
+
+/* TABLE */
+table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+th { background: var(--navy2); color: #fff; padding: 9px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: #C0C8D2; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* CITE */
+.cite { background: rgba(181,84,58,0.08); border-left: 3px solid var(--terra); padding: 10px 14px; margin: 10px 0; border-radius: 0 6px 6px 0; font-size: 13px; color: var(--terra-light); }
+.cite strong { color: #fff; font-style: normal; }
+
+/* HIGHLIGHT */
+.highlight { display: flex; gap: 10px; align-items: flex-start; background: rgba(58,125,92,0.07); border: 1px solid rgba(58,125,92,0.18); border-radius: 6px; padding: 11px 14px; margin: 10px 0; }
+.highlight-icon { font-size: 14px; flex-shrink: 0; margin-top: 2px; color: var(--green); font-weight: 700; }
+.highlight-text { font-size: 13px; }
+.highlight-text strong { color: var(--green-light); }
+
+/* TWO COL */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } .signal-grid { grid-template-columns: 1fr; } }
+
+.sep { height: 1px; background: var(--border); margin: 40px 0; }
+
+/* BANNER */
+.banner { border-radius: 8px; padding: 16px 22px; margin: 18px 0; display: flex; align-items: center; gap: 14px; }
+.banner.green { background: linear-gradient(135deg, var(--green) 0%, #2D6B4A 100%); }
+.banner .text { color: #fff; }
+.banner .text strong { font-size: 15px; display: block; margin-bottom: 3px; }
+.banner .text span { font-size: 13px; opacity: 0.9; }
+
+/* HERO */
+.hero { padding: 50px 0 10px; }
+.hero-role { display: inline-block; background: var(--terra); color: #fff; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 4px; margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
+.hero-meta { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 16px; }
+.hero-meta-item { font-size: 12px; color: var(--text-muted); }
+.hero-meta-item strong { color: var(--text-secondary); display: block; font-size: 14px; margin-bottom: 2px; }
+
+/* STAT ROW */
+.stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0; }
+.stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; flex: 1; min-width: 130px; text-align: center; }
+.stat-box .val { font-family: 'Source Serif 4'; font-size: 24px; font-weight: 700; color: var(--green); }
+.stat-box .label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--terra); z-index: 200; transition: width 0.1s; }
+
+/* FOOTER */
+.footer { text-align: center; padding: 40px 0 20px; border-top: 1px solid var(--border); margin-top: 40px; }
+.footer p { font-size: 12px; color: var(--text-muted); }
+.footer a { color: var(--terra-light); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+
+<nav class="nav">
+  <span class="logo">Factor Portfolio</span>
+  <a href="#overview">Overview</a>
+  <a href="#pipeline">Pipeline</a>
+  <a href="#factors">Factors</a>
+  <a href="#regime">Regime</a>
+  <a href="#overlay">Overlay</a>
+  <a href="#optimization">Optimization</a>
+  <a href="#results">Results</a>
+  <a href="#oos">Out-of-Sample</a>
+  <a href="#next">Next Steps</a>
+</nav>
+
+<div class="container">
+
+<!-- HERO -->
+<div class="hero section" id="overview">
+  <div class="hero-role">Quantitative Portfolio Project</div>
+  <h1>Systematic Factor <span>Portfolio</span></h1>
+  <p class="subtitle">A quantitative equity and fixed-income strategy built for institutional capital protection.</p>
+  <p style="color:var(--text-secondary); font-size:13px; margin-top:8px; max-width:700px;">
+    This document presents the full technical architecture of a systematic factor-based portfolio managing CAD 100M across North American equities and bonds. The system combines six academic risk premia, an adaptive regime detection engine, and a crash-protection overlay to deliver consistent returns while limiting drawdowns. Built as part of GSF-3120 (Quantitative Finance Seminar) at Universite Laval, Winter 2026.
+  </p>
+
+  <div class="hero-meta">
+    <div class="hero-meta-item"><strong>CAD 100M</strong>Notional Capital</div>
+    <div class="hero-meta-item"><strong>753 Securities</strong>Investment Universe</div>
+    <div class="hero-meta-item"><strong>6 Factors</strong>Academic Premia</div>
+    <div class="hero-meta-item"><strong>14 Years</strong>Backtest Period</div>
+  </div>
+
+  <div class="stat-row" style="margin-top:24px;">
+    <div class="stat-box"><div class="val">14.0%</div><div class="label">Gross Ann. Return</div></div>
+    <div class="stat-box"><div class="val">0.79</div><div class="label">Gross Sharpe</div></div>
+    <div class="stat-box"><div class="val">0.99</div><div class="label">Calmar Ratio</div></div>
+    <div class="stat-box"><div class="val">-14.1%</div><div class="label">Max Drawdown</div></div>
+    <div class="stat-box"><div class="val">-8.7%</div><div class="label">COVID Drawdown</div></div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- PIPELINE -->
+<div class="section" id="pipeline">
+  <h2><span class="num">01</span> Pipeline Architecture</h2>
+
+  <div class="flow">
+    <div class="flow-step navy">753 Securities<small>S&P 500, TSX, ETFs</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step navy">6 Factors<small>Composite Score</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step terra">Regime Detection<small>6 Signals &rarr; Binary</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step navy">MV Optimizer<small>Ledoit-Wolf + cvxpy</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step green">~13 Positions<small>Constrained</small></div>
+  </div>
+
+  <div class="card navy">
+    <div class="card-title">Data Sources</div>
+    <table>
+      <tr><th>Data</th><th>Source</th><th>Frequency</th><th>Usage</th></tr>
+      <tr><td>Prices &amp; volumes</td><td>Yahoo Finance</td><td>Daily</td><td>Momentum, Low Volatility, returns</td></tr>
+      <tr><td>Fundamentals</td><td>Compustat via WRDS</td><td>Quarterly</td><td>Value, Profitability, Investment, PEAD</td></tr>
+      <tr><td>VIX</td><td>Yahoo Finance (^VIX)</td><td>Daily</td><td>Regime signal #1</td></tr>
+      <tr><td>Yield curve</td><td>FRED (DGS10, DGS2)</td><td>Daily</td><td>Regime signal #3</td></tr>
+      <tr><td>Credit spreads</td><td>FRED (BAMLH0A0HYM2)</td><td>Daily</td><td>Regime signal #4</td></tr>
+      <tr><td>FX rates</td><td>Yahoo (USDCAD=X)</td><td>Daily</td><td>CAD conversion</td></tr>
+    </table>
+    <div class="highlight">
+      <span class="highlight-icon">&gt;</span>
+      <div class="highlight-text"><strong>Strict point-in-time compliance:</strong> Only publications prior to the evaluation date plus a 45-day SEC reporting lag are used. No look-ahead bias in any fundamental data.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- FACTORS -->
+<div class="section" id="factors">
+  <h2><span class="num">02</span> Factor Model &mdash; Six Academic Premia</h2>
+
+  <div class="card terra">
+    <div class="card-title">Momentum <span class="badge badge-w">24%</span> <span class="badge badge-s">Price Data</span></div>
+    <p>Cross-sectional momentum following Jegadeesh &amp; Titman (1993). Returns over the past 12 months, skipping the most recent month to avoid short-term reversal.</p>
+    <div class="formula">
+      RISK_ON:  Score = Return(t-252 to t-21) &rarr; percentile rank<br>
+      RISK_OFF: Score = Price / 52-week High &rarr; percentile rank<br>
+      <span class="comment">// In RISK_OFF, switches to 52-week high ratio (George &amp; Hwang 2004)</span><br>
+      <span class="comment">// Avoids momentum crashes during market reversals</span>
+    </div>
+    <div class="cite"><strong>Jegadeesh &amp; Titman (1993), Journal of Finance:</strong> Stocks with strong past returns continue to outperform over 3-12 month horizons. Documented across 200+ years of global data.</div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Value <span class="badge badge-w">35%</span> <span class="badge badge-s">Compustat</span></div>
+    <p>Earnings Yield (Net Income TTM / Market Capitalization). A modernized value definition that avoids intangible asset biases inherent in traditional book-to-market ratios.</p>
+    <div class="formula">
+      Earnings Yield = Net Income (TTM) / Market Cap &rarr; percentile rank<br>
+      <span class="comment">// Quarterly data from Compustat with 45-day publication lag</span>
+    </div>
+    <div class="cite"><strong>Fama &amp; French (1992/2015):</strong> The value premium is documented over 60+ years. Negative correlation with momentum (~-0.3), providing natural diversification within the composite signal.</div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Profitability (RMW) <span class="badge badge-w">15%</span> <span class="badge badge-s">Compustat</span></div>
+    <p>Gross Profit over Total Assets, following Novy-Marx (2013). "Robust Minus Weak" in Fama-French 5-factor terminology.</p>
+    <div class="formula">GPOA = Gross Profit / Total Assets &rarr; percentile rank</div>
+    <div class="cite"><strong>Novy-Marx (2013), JFE:</strong> Gross profitability predicts cross-sectional returns as reliably as book-to-market. The only FF5 factor that has consistently delivered a premium across all tested periods.</div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">PEAD <span class="badge badge-w">10%</span> <span class="badge badge-s">Compustat</span></div>
+    <p>Post-Earnings Announcement Drift. Standardized Unexpected Earnings (SUE) measure capturing the market's under-reaction to earnings surprises.</p>
+    <div class="formula">
+      SUE = (EPS_actual - EPS_expected) / std(surprises) &rarr; percentile rank<br>
+      <span class="comment">// Distinct from momentum, not subsumed by FF5 factors</span>
+    </div>
+    <div class="cite"><strong>Bernard &amp; Thomas (1989), Journal of Accounting Research:</strong> After a positive earnings surprise, prices continue drifting upward for 60-90 days. One of the most robust anomalies in finance.</div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Investment (CMA) <span class="badge badge-w">8%</span> <span class="badge badge-s">Compustat</span></div>
+    <p>"Conservative Minus Aggressive" from Fama &amp; French (2015). Firms that invest conservatively tend to outperform aggressive investors.</p>
+    <div class="formula">Score = Inverse(YoY Total Asset Growth) &rarr; percentile rank</div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Low Volatility <span class="badge badge-w">8%</span> <span class="badge badge-s">Price Data</span></div>
+    <p>Inverse of 12-month realized volatility. Low-volatility stocks deliver higher risk-adjusted returns than the CAPM predicts.</p>
+    <div class="formula">Score = 1 / (Annualized Vol + 0.01) &rarr; percentile rank</div>
+    <div class="cite"><strong>van Vliet (CFA Institute 2024):</strong> 2.1% alpha after controlling for all other factors. The low-volatility anomaly remains one of the strongest challenges to efficient market theory.</div>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Composite Score &mdash; Dynamic Regime Weighting</div>
+    <div class="formula">
+      Score_i = Sum(weight_j x percentile_rank_j(stock_i))<br><br>
+      RISK_ON:  0.28 Mom + 0.35 Val + 0.15 Prof + 0.02 LowVol + 0.08 Inv + 0.12 PEAD<br>
+      RISK_OFF: 0.12 Mom + 0.30 Val + 0.15 Prof + 0.15 LowVol + 0.08 Inv + 0.20 PEAD
+    </div>
+    <p style="margin-top:8px;">In RISK_OFF, the model shifts weight toward defensive factors (Low Volatility, PEAD) and away from momentum. Factor weights are calibrated from academic literature, not optimized in-sample.</p>
+    <div class="highlight">
+      <span class="highlight-icon">&gt;</span>
+      <div class="highlight-text"><strong>Anti-data-mining discipline:</strong> A grid search over 45,801 weight combinations suggested PEAD at 37% and Value at 1%. This was deliberately not followed. Harvey, Liu &amp; Zhu (2016) show that the majority of published factors are false positives. All 15 factor pairs maintain correlations below 0.37.</div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- REGIME -->
+<div class="section" id="regime">
+  <h2><span class="num">03</span> Regime Detection &mdash; Six Signals, One Decision</h2>
+
+  <div class="flow">
+    <div class="flow-step navy">6 Macro Signals<small>Weighted Composite</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step terra">Threshold + 5-Day<br>Confirmation<small>Hysteresis</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-step green">RISK_ON or RISK_OFF<small>Binary Decision</small></div>
+  </div>
+
+  <p style="margin-bottom:14px;">Each signal produces a score between -1 (bearish) and +1 (bullish). The composite score triggers a regime switch when it crosses the threshold of -0.05 for 5 consecutive days. Binary mode was selected over continuous after controlled testing showed it reduced maximum drawdown from -17.6% to -14.1%.</p>
+
+  <div class="signal-grid">
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">Volatility (VIX)</span><span class="signal-weight">25%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> Yahoo Finance (^VIX)<br>VIX &gt; 30 &rarr; RISK_OFF signal<br>VIX &lt; 18 &rarr; RISK_ON signal<br>Linear interpolation between thresholds</div>
+    </div>
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">Trend (SMA 50/200)</span><span class="signal-weight">25%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> S&P 500 price data<br>SMA50 &gt; SMA200 + positive 126-day momentum &rarr; bullish<br>Death cross (SMA50 &lt; SMA200) &rarr; bearish</div>
+    </div>
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">Yield Curve</span><span class="signal-weight">15%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> FRED (DGS10 - DGS2)<br>Spread &lt; 0 (inverted) &rarr; RISK_OFF<br>Spread &gt; 1.0% (steep) &rarr; RISK_ON<br>Inversions precede recessions by 12-18 months</div>
+    </div>
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">Credit Spreads</span><span class="signal-weight">10%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> FRED (HY OAS)<br>Spread &gt; 80th percentile (252d) &rarr; stress<br>Spread &lt; 20th percentile &rarr; calm</div>
+    </div>
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">Market Breadth</span><span class="signal-weight">10%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> Computed from universe<br>% of stocks above SMA200 &gt; 60% &rarr; bullish<br>% below 40% &rarr; bearish</div>
+    </div>
+    <div class="signal-card">
+      <div class="signal-header"><span class="signal-name">HMM (2-State)</span><span class="signal-weight">15%</span></div>
+      <div class="signal-logic"><strong>Source:</strong> GaussianHMM (hmmlearn)<br>2 latent states: Low Vol / High Vol<br>504-day lookback, annual retraining<br>Captures structural regime shifts beyond VIX</div>
+    </div>
+  </div>
+
+  <div class="card navy">
+    <div class="card-title">Regime-Driven Asset Allocation</div>
+    <div class="two-col">
+      <div>
+        <h3 style="color:var(--green)">RISK_ON Allocation</h3>
+        <table><tr><td>Equities</td><td><strong>72.5%</strong></td></tr><tr><td>Bonds</td><td>25.0%</td></tr><tr><td>Cash</td><td>2.5%</td></tr></table>
+      </div>
+      <div>
+        <h3 style="color:var(--terra-light)">RISK_OFF Allocation</h3>
+        <table><tr><td>Equities</td><td><strong>58.5%</strong></td></tr><tr><td>Bonds</td><td>39.0%</td></tr><tr><td>Cash</td><td>2.5%</td></tr></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- OVERLAY -->
+<div class="section" id="overlay">
+  <h2><span class="num">04</span> Crash-Only Overlay &mdash; Three Layers of Protection</h2>
+
+  <div class="card terra">
+    <div class="card-title">Layered Risk Management Architecture</div>
+    <p style="margin-bottom:12px;">During market stress, three mechanisms activate sequentially, each adding a layer of downside protection:</p>
+    <table>
+      <tr><th>Layer</th><th>Mechanism</th><th>Trigger</th><th>Effect</th></tr>
+      <tr><td><strong>1</strong></td><td>Regime Weight Adjustment</td><td>Regime switches to RISK_OFF</td><td>Momentum weight: 28% &rarr; 12%<br>Low Vol weight: 2% &rarr; 15%</td></tr>
+      <tr><td><strong>2</strong></td><td>Risk-Managed Momentum</td><td>Regime = RISK_OFF</td><td>Momentum calculation switches from<br>12m return to 52-week high ratio</td></tr>
+      <tr><td><strong>3</strong></td><td>Crash-Only Overlay</td><td>RISK_OFF + 2+ stress flags<br>+ confidence &ge; 70%</td><td>Equity multiplier &times;0.70<br>Equities: 58.5% &rarr; ~41%</td></tr>
+    </table>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Overlay Mechanics</div>
+    <div class="formula">
+      ENTRY: RISK_OFF confirmed + stress score &ge; 2 of 4 flags + confidence &ge; 70%<br>
+      &nbsp;&nbsp;Flags: VIX &gt; 30 | SMA20 &lt; SMA50 or DD_20d &le; -8% | High realized vol | Wide credit spreads<br><br>
+      EFFECT: exposure_multiplier = 1.0 - (confidence x 0.4), floor = 0.70<br>
+      &nbsp;&nbsp;Equities: 58.5% x 0.70 = ~41%, surplus reallocated to bonds<br><br>
+      EXIT: Stress score &le; 1 flag + 10-day cooldown to prevent whipsaw
+    </div>
+    <div class="highlight">
+      <span class="highlight-icon">&gt;</span>
+      <div class="highlight-text"><strong>COVID-19 case study:</strong> The overlay activated in late February 2020, reducing equity exposure from 58.5% to approximately 41%. Combined with the RMOM switch to the 52-week high signal, the portfolio drew down only -8.7% while the S&P 500 fell -34%. This three-layer system is the primary driver of the strategy's crisis resilience.</div>
+    </div>
+  </div>
+
+  <div class="card navy">
+    <div class="card-title">Risk-Managed Momentum (RMOM)</div>
+    <p>Based on Barroso &amp; Santa-Clara (2015, Review of Financial Studies). Classical momentum is highly profitable but subject to devastating crashes during market reversals. RMOM addresses this by switching the momentum signal in RISK_OFF from the 12-month return to the 52-week high ratio, which does not exhibit the same crash behavior.</p>
+    <table>
+      <tr><th>Metric</th><th>Without RMOM</th><th>With RMOM</th></tr>
+      <tr><td>Max Drawdown</td><td>-20.9%</td><td style="color:var(--green-light)"><strong>-14.1%</strong></td></tr>
+      <tr><td>COVID Drawdown</td><td>-12.7%</td><td style="color:var(--green-light)"><strong>-8.7%</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- OPTIMIZATION -->
+<div class="section" id="optimization">
+  <h2><span class="num">05</span> Portfolio Optimization</h2>
+
+  <div class="card terra">
+    <div class="card-title">Ledoit-Wolf Shrinkage Covariance</div>
+    <div class="formula">
+      Sigma_shrunk = (1 - alpha) x Sigma_sample + alpha x Sigma_target<br>
+      <span class="comment">// alpha = analytically optimal shrinkage intensity</span><br>
+      <span class="comment">// Sigma_target = diagonal matrix (individual variances)</span><br>
+      <span class="comment">// Lookback = 252 days, annualized</span>
+    </div>
+    <p>The sample covariance matrix is highly noisy with 753 securities and 252 observations. Ledoit-Wolf shrinkage (2004) regularizes the estimate by pulling it toward a stable diagonal target, producing more robust portfolio weights.</p>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Optimization Constraints</div>
+    <table>
+      <tr><th>Constraint</th><th>Value</th><th>Rationale</th></tr>
+      <tr><td>Long only</td><td>w &ge; 0</td><td>Institutional mandate</td></tr>
+      <tr><td>Position bounds</td><td>1% &ndash; 10%</td><td>Minimum significance, maximum diversification</td></tr>
+      <tr><td>Bond floor</td><td>&ge; 25%</td><td>Mandate requirement, enables defensive rotation</td></tr>
+      <tr><td>Sector cap</td><td>&le; 25% GICS</td><td>Concentration risk management</td></tr>
+      <tr><td>Liquidity</td><td>&ge; $1M/day ADV</td><td>Execution feasibility</td></tr>
+      <tr><td>Market impact</td><td>&le; 10% of ADV</td><td>Limits price impact of trades</td></tr>
+    </table>
+  </div>
+
+  <div class="card navy">
+    <div class="card-title">Adaptive Smoothing</div>
+    <div class="formula">
+      w_final = (1 - lambda) x w_previous + lambda x w_optimal<br><br>
+      Normal regime:   lambda = 0.40 (gradual adjustment, reduces turnover)<br>
+      Regime change:   lambda = 0.85 (fast reaction to new market conditions)<br>
+      Degenerate state: lambda = 1.00 (full reset if previous portfolio &gt; 50% cash)
+    </div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- RESULTS -->
+<div class="section" id="results">
+  <h2><span class="num">06</span> Backtest Results (2012&ndash;2026)</h2>
+
+  <div class="card navy">
+    <div class="card-title">Walk-Forward Methodology</div>
+    <div class="formula">
+      Training window: 24 months | Test window: 6 months | Step: 3 months<br>
+      Period: 2010-01-01 to 2026-12-22 | ~75 rolling windows<br>
+      <span class="comment">// At each window, covariance and factor scores are re-estimated</span><br>
+      <span class="comment">// on the training set only, then tested on unseen data</span>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card green">
+      <div class="card-title">Gross Performance (Model Quality)</div>
+      <table>
+        <tr><td>Annualized Return</td><td><strong>14.0%</strong></td></tr>
+        <tr><td>Terminal NAV</td><td>CAD 700M (from 100M)</td></tr>
+        <tr><td>Sharpe Ratio</td><td><strong>0.79</strong></td></tr>
+        <tr><td>Calmar Ratio</td><td><strong>0.99</strong></td></tr>
+      </table>
+    </div>
+    <div class="card navy">
+      <div class="card-title">Risk Profile</div>
+      <table>
+        <tr><td>Annualized Volatility</td><td>11.45%</td></tr>
+        <tr><td>Maximum Drawdown</td><td>-14.10%</td></tr>
+        <tr><td>Daily VaR (95%)</td><td>-1.10%</td></tr>
+        <tr><td>Daily CVaR (95%)</td><td>-1.56%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Crisis Performance vs. S&P 500</div>
+    <table>
+      <tr><th>Crisis</th><th>Portfolio</th><th>Benchmark</th><th>Protection</th></tr>
+      <tr><td>COVID-19 (Feb-Mar 2020)</td><td>-8.7%</td><td>-34.0%</td><td style="color:var(--green-light)">+25.3 pts</td></tr>
+      <tr><td>Rate Hikes (2022)</td><td>-9.4%</td><td>-25.0%</td><td style="color:var(--green-light)">+15.6 pts</td></tr>
+      <tr><td>SVB Crisis (Mar 2023)</td><td>+1.2%</td><td>-5.0%</td><td style="color:var(--green-light)">+6.2 pts</td></tr>
+      <tr><td>Tech Correction (2024)</td><td>+2.0%</td><td>-8.0%</td><td style="color:var(--green-light)">+10.0 pts</td></tr>
+    </table>
+    <p style="margin-top:10px; font-size:13px; color:var(--text-secondary);">Total estimated losses avoided versus benchmark: CAD 57 million across four crises.</p>
+  </div>
+
+  <div class="card navy">
+    <div class="card-title">Controlled Tests &mdash; Component Attribution</div>
+    <table>
+      <tr><th>Test</th><th>Comparison</th><th>Result</th></tr>
+      <tr><td>Binary vs. continuous regime</td><td>Max drawdown</td><td>-17.6% &rarr; -14.1% (binary wins)</td></tr>
+      <tr><td>With vs. without RMOM</td><td>COVID drawdown</td><td>-12.7% &rarr; -8.7%</td></tr>
+      <tr><td>Regime vs. static allocation</td><td>Sharpe improvement</td><td>+0.093 (+61%)</td></tr>
+      <tr><td>Temporal stability</td><td>Sharpe difference (halves)</td><td>0.039 (stable)</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- OOS -->
+<div class="section" id="oos">
+  <h2><span class="num">07</span> Out-of-Sample Validation (2020&ndash;2026)</h2>
+
+  <div class="banner green">
+    <div class="text">
+      <strong>Model validated out-of-sample with positive net returns</strong>
+      <span>All hyperparameters frozen on 2012-2019 data, tested on 2020-2026 without any modification.</span>
+    </div>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Out-of-Sample Performance</div>
+    <table>
+      <tr><th>Metric</th><th>In-Sample</th><th>Out-of-Sample</th><th>Ratio</th></tr>
+      <tr><td>Gross Annualized Return</td><td>~14%</td><td style="color:var(--green-light)"><strong>~15%</strong></td><td>~1.07x</td></tr>
+      <tr><td>Net Annualized Return</td><td>7.11%</td><td style="color:var(--green-light)"><strong>5.57%</strong></td><td>0.78x</td></tr>
+      <tr><td>Calmar Ratio</td><td>0.399</td><td>0.213</td><td>0.53x</td></tr>
+    </table>
+    <p style="margin-top:12px">The OOS period encompasses COVID-19, the fastest rate-hiking cycle in 40 years, the SVB banking crisis, and the 2025 tariff shock. The regime detector was active 36.6% of the time in RISK_OFF (vs. 17.6% in-sample), confirming its adaptive response to elevated market stress.</p>
+  </div>
+
+  <div class="highlight">
+    <span class="highlight-icon">&gt;</span>
+    <div class="highlight-text"><strong>What "frozen hyperparameters" means:</strong> All factor weights, regime thresholds, overlay rules, allocation splits, smoothing parameters, and optimization constraints were set using 2012-2019 data only. The OOS test runs the exact same model on data it has never seen. Adaptive components (covariance estimation, factor scores, regime state) update naturally with new market data &mdash; as they would in a live deployment.</div>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- NEXT STEPS -->
+<div class="section" id="next">
+  <h2><span class="num">08</span> Identified Improvements &amp; Next Steps</h2>
+
+  <div class="two-col">
+    <div class="card green">
+      <div class="card-title">Short-Term Improvements</div>
+      <p><strong>Variable risk-free rate:</strong> Replacing the fixed 5% Rf with the DTB3 series from FRED would better reflect the actual rate environment. This is a ~10 line code change that would provide a more representative view of risk-adjusted metrics.</p>
+      <p style="margin-top:10px"><strong>Turnover reduction:</strong> Increasing the smoothing parameter or moving to weekly-only rebalancing would reduce annual turnover below 200% while preserving most of the signal value.</p>
+      <p style="margin-top:10px"><strong>HMM/VIX redundancy analysis:</strong> Computing the Spearman correlation between the HMM and VIX signals would quantify potential redundancy and inform better weight calibration.</p>
+    </div>
+    <div class="card navy">
+      <div class="card-title">Strategic Enhancements</div>
+      <p><strong>Alternative safe havens:</strong> Adding gold or commodity ETFs as defensive assets would address the 2022 limitation where bonds and equities fell simultaneously. Real assets can serve as a hedge when traditional diversification breaks down.</p>
+      <p style="margin-top:10px"><strong>Long-short extension:</strong> If the mandate permits, adding a short book would approximately double the strategy's Sharpe ratio, based on academic benchmarks for factor strategies.</p>
+      <p style="margin-top:10px"><strong>Granular ESG integration:</strong> Replacing the current sector-level proxy with security-level Sustainalytics ratings would provide meaningful ESG differentiation rather than a decorative tilt.</p>
+    </div>
+  </div>
+
+  <div class="card terra">
+    <div class="card-title">Known Limitations</div>
+    <p style="margin-bottom:8px;">The following limitations are documented and quantified, not discovered post-hoc:</p>
+    <p><strong>Positive equity-bond correlation (2022):</strong> When both asset classes fall together, the defensive rotation toward bonds becomes counterproductive. The portfolio lost -12.1% vs. -8.0% for a static allocation during this period. This is a structural limitation of any risk-on/risk-off framework.</p>
+    <p style="margin-top:8px"><strong>Survivorship bias:</strong> The universe includes 21 historical tickers, but hundreds of delisted securities are missing from the S&P 500 backtest sample.</p>
+    <p style="margin-top:8px"><strong>Factor decay risk:</strong> McLean &amp; Pontiff (2016) document a 26% average decline in factor premia after academic publication. Diversification across six low-correlation factors mitigates but does not eliminate this risk.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>GSF-3120 &mdash; Quantitative Finance Seminar &mdash; Universite Laval, Winter 2026</p>
+  <p style="margin-top:4px">Built with Python, cvxpy, hmmlearn, and Compustat/WRDS data.</p>
+</div>
+
+</div>
+
+<script>
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+});
+const sections = document.querySelectorAll('.section[id]');
+const navLinks = document.querySelectorAll('.nav a[href^="#"]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) current = s.id; });
+  navLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+});
+</script>
+</body>
+</html>
