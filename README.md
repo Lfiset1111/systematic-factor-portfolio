@@ -2,7 +2,7 @@
 
 A quantitative long-only portfolio managing CAD 100M across North American equities and bonds. The system captures six academic risk premia through a fully automated pipeline — from data ingestion to position sizing — with an adaptive regime detection engine and a crash-protection overlay designed for institutional capital preservation.
 
-**[[Live Technical Overview](https://lfiset1111.github.io/systematic-factor-portfolio/)** · Built at Université Laval (GSF-3120, Winter 2026)
+**[Live Technical Overview](https://lfiset1111.github.io/systematic-factor-portfolio/)** · Built at Université Laval (GSF-3120, Winter 2026)
 
 ---
 
@@ -11,14 +11,14 @@ A quantitative long-only portfolio managing CAD 100M across North American equit
 | Metric | Gross | Net of Fees |
 |---|---|---|
 | Annualized Return | 14.0% | 7.23% |
-| Sharpe Ratio (Rf = 5%) | 0.79 | — |
+| Sharpe Ratio | 0.79 | — |
 | Calmar Ratio | 0.99 | 0.51 |
 | Max Drawdown | -14.1% | -14.1% |
 | COVID-19 Drawdown | -8.7% | -8.7% |
 | Volatility | 11.45% | 11.45% |
 | Daily VaR (95%) | -1.10% | -1.10% |
 
-The strategy was validated out-of-sample on 2020–2026 data (COVID, 2022 rate hikes, 2025 tariff shock) with all hyperparameters frozen from the 2012–2019 training period. Gross OOS return: ~15% annualized.
+The strategy was validated out-of-sample on 2020–2026 data (COVID-19, 2022 rate hikes, SVB crisis, 2025 tariff shock) with all hyperparameters frozen from the 2012–2019 training period. Gross OOS return: ~15% annualized.
 
 ---
 
@@ -116,7 +116,9 @@ Adaptive components (covariance matrix, factor scores, regime state) update with
 | Compustat via WRDS | Quarterly fundamentals (income, assets, earnings dates) | Institutional subscription |
 | FRED | Treasury yields (DGS10, DGS2), HY OAS, risk-free rate | Public API |
 
-All fundamental data respects strict point-in-time constraints with a 45-day SEC reporting lag.
+All fundamental data respects strict point-in-time constraints with a 45-day SEC reporting lag. Raw data files are not included in this repository per WRDS Terms of Use. To reproduce results, obtain WRDS access through your institution.
+
+> *Wharton Research Data Services (WRDS) was used in preparing this research project. This service and the data available thereon constitute valuable intellectual property and trade secrets of WRDS and/or its third-party suppliers.*
 
 ---
 
@@ -133,16 +135,14 @@ All fundamental data respects strict point-in-time constraints with a 45-day SEC
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
-├── GSF3120_Portfolio_Management.ipynb    # Full pipeline: data → factors → regime → optimization → backtest
-├── index.html                           # Interactive technical overview (deployable via GitHub Pages)
-├── README.md
-└── docs/
-    ├── rapport_final.pdf                # 25-page research report (French)
-    └── presentation.pptx               # Investment committee pitch deck
+├── index.html       # Interactive technical overview (deployed via GitHub Pages)
+├── README.md        # This file
 ```
+
+Full source code (Jupyter notebook with ~11,000 lines across 15+ modules) is available upon request.
 
 ---
 
@@ -150,28 +150,52 @@ All fundamental data respects strict point-in-time constraints with a 45-day SEC
 
 **Positive equity-bond correlation (2022).** When equities and bonds decline simultaneously, the defensive rotation toward bonds becomes counterproductive. The portfolio lost -12.1% vs. -8.0% for a static allocation during this period. This is a structural limitation of any risk-on/risk-off framework and is documented as a known risk.
 
-**Survivorship bias.** The backtest universe includes 21 historical tickers but is missing hundreds of delisted S&P 500 constituents.
+**Benchmark selection.** The current benchmark (S&P 500) does not reflect the portfolio's mixed equity-bond allocation. A composite benchmark (e.g., 60/40 equity-bond blend) would provide a fairer comparison and isolate alpha from factor selection vs. asset allocation.
+
+**Survivorship bias.** The backtest universe includes 21 historical tickers but is missing hundreds of delisted S&P 500 constituents. Integration of CRSP data via WRDS would address this limitation.
 
 **Turnover.** Annual turnover of 284% remains elevated despite smoothing and no-trade bands. This generates transaction costs and requires institutional-grade execution infrastructure.
 
 **Factor decay.** McLean & Pontiff (2016) document a 26% average decline in factor premia after academic publication. Diversification across six low-correlation factors mitigates but does not eliminate this risk.
 
----
-
-## Potential Improvements
-
-- Replace fixed 5% risk-free rate with FRED DTB3 series for more representative risk-adjusted metrics
-- Add real assets (gold, commodities) as alternative safe havens for inflationary shock scenarios
-- Compute HMM/VIX signal correlation to quantify and address potential redundancy
-- Increase smoothing or move to weekly-only rebalancing to reduce turnover below 200%
-- Replace sector-level ESG proxy with security-level Sustainalytics ratings
-- Explore long-short extension if mandate constraints are relaxed
+**ESG integration.** The current ESG tilt uses a sector-level proxy rather than security-level scores, providing limited differentiation within sectors.
 
 ---
 
-## Team
+## Planned Improvements
 
-Built by a four-person team as part of GSF-3120 (Quantitative Finance Seminar) at Université Laval, Winter 2026. The project involved designing, implementing, backtesting, and presenting a systematic portfolio strategy to a simulated investment committee.
+### Execution & Trading Infrastructure
+- **Market impact model (Almgren-Chriss):** Estimate execution costs as a function of order size, ADV, and volatility using TAQ or Bloomberg data
+- **VWAP/TWAP execution algorithms:** Slice block orders according to historical intraday volume profiles to minimize market impact
+- **Transaction Cost Analysis (TCA):** Post-trade reporting module measuring implementation shortfall, timing cost, and opportunity cost per rebalancement
+
+### Bond Factor Model (BondSelector v2)
+The current bond scoring model (momentum + volatility) would be replaced by a multi-factor approach using Bloomberg/Refinitiv data:
+
+| Factor | Weight | Source | Expected Impact |
+|---|---|---|---|
+| Carry (YTM) | 30% | Bloomberg `YAS_YLD_SPREAD` | +30–50 bps |
+| Rate Momentum | 20% | Bloomberg `USGG10YR` / `USGG2YR` | +15–25 bps |
+| Spread Momentum | 25% | Bloomberg `OAS_SPREAD_BID` | +20–40 bps |
+| Rolldown | 10% | Bloomberg yield curves `YCGT0025` / `YCGT0016` | +10–20 bps |
+| Duration Timing | 15% | Yield curve slope + VIX + regime | +20–30 bps |
+
+### Data & Methodology
+- **Composite benchmark:** Add a 60/40 blended benchmark (40% SPY + 20% XIU.TO + 25% AGG + 15% XBB.TO) to isolate factor alpha from asset allocation effects
+- **Variable risk-free rate:** Replace fixed 5% Rf with FRED DTB3 series
+- **Survivorship bias correction:** Integrate CRSP delisted tickers via WRDS
+- **Granular ESG:** Replace sector-level proxy with security-level Sustainalytics scores via Bloomberg
+- **Dynamic liquidity constraints:** Replace static $1M/day floor with ADV-based constraints (max 10–15% of 20-day ADV per position)
+- **Alternative safe havens:** Add gold and commodity ETFs (GLD, IAU, DJP) to address the 2022 equity-bond correlation breakdown
+- **HMM/VIX redundancy analysis:** Quantify signal overlap via Spearman correlation and adjust weights accordingly
+
+---
+
+## Author
+
+**Laurie Fiset** — Université Laval, BSc Quantitative Finance
+
+Developed as part of a four-person team in GSF-3120 (Quantitative Finance Seminar), Winter 2026. The project involved designing, implementing, backtesting, and presenting a systematic portfolio strategy to a simulated investment committee.
 
 ---
 

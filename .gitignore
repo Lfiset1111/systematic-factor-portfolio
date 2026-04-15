@@ -1,0 +1,12 @@
+# Hide notebook until cleaned
+systematic_factor_portfolio.ipynb
+
+# Data files
+*.csv
+*.parquet
+*.pkl
+data/
+
+# Python
+__pycache__/
+.ipynb_checkpoints/
