@@ -2,7 +2,7 @@
 
 A quantitative long-only portfolio managing CAD 100M across North American equities and bonds. The system captures six academic risk premia through a fully automated pipeline — from data ingestion to position sizing — with an adaptive regime detection engine and a crash-protection overlay designed for institutional capital preservation.
 
-**[Live Technical Overview](https://yourusername.github.io/systematic-factor-portfolio/)** · Built at Université Laval (GSF-3120, Winter 2026)
+**[[Live Technical Overview](https://lfiset1111.github.io/systematic-factor-portfolio/)** · Built at Université Laval (GSF-3120, Winter 2026)
 
 ---
 
