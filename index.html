@@ -148,7 +148,7 @@ tr:hover td { background: rgba(255,255,255,0.02); }
   <h1>Systematic Factor <span>Portfolio</span></h1>
   <p class="subtitle">A quantitative equity and fixed-income strategy built for institutional capital protection.</p>
   <p style="color:var(--text-secondary); font-size:13px; margin-top:8px; max-width:700px;">
-    This document presents the full technical architecture of a systematic factor-based portfolio managing CAD 100M across North American equities and bonds. The system combines six academic risk premia, an adaptive regime detection engine, and a crash-protection overlay to deliver consistent returns while limiting drawdowns. Built as part of GSF-3120 (Quantitative Finance Seminar) at Universite Laval, Winter 2026.
+    This document presents the full technical architecture of a systematic factor-based portfolio managing CAD 100M across North American equities and bonds. The system combines six academic risk premia, an adaptive regime detection engine, and a crash-protection overlay to deliver consistent returns while limiting drawdowns. Built by Laurie Fiset as part of GSF-3120 (Quantitative Finance Seminar) at Universit&eacute; Laval, Winter 2026.
   </p>
 
   <div class="hero-meta">
@@ -517,16 +517,34 @@ tr:hover td { background: rgba(255,255,255,0.02); }
 
   <div class="two-col">
     <div class="card green">
+      <div class="card-title">Execution &amp; Trading Infrastructure</div>
+      <p><strong>Market impact model (Almgren-Chriss):</strong> Estimate execution costs as a function of order size, ADV, and volatility using TAQ or Bloomberg data. Produces realistic net returns.</p>
+      <p style="margin-top:10px"><strong>VWAP/TWAP execution algorithms:</strong> Slice block orders according to historical intraday volume profiles to minimize market impact. Directly relevant to institutional portfolio trading.</p>
+      <p style="margin-top:10px"><strong>Transaction Cost Analysis (TCA):</strong> Post-trade reporting module measuring implementation shortfall, timing cost, and opportunity cost per rebalancement.</p>
+    </div>
+    <div class="card navy">
+      <div class="card-title">Bond Factor Model v2 (Bloomberg)</div>
+      <p><strong>Carry (30%):</strong> YTM via Bloomberg <code>YAS_YLD_SPREAD</code>. Expected impact: +30&ndash;50 bps on bond sleeve.</p>
+      <p style="margin-top:10px"><strong>Rate Momentum (20%):</strong> 3m/12m sovereign rate changes via <code>USGG10YR</code>. Replaces static REGIME_BOND_MIX with dynamic duration timing.</p>
+      <p style="margin-top:10px"><strong>Spread Momentum (25%):</strong> OAS variation via <code>OAS_SPREAD_BID</code>. Avoids credit before corrections. +20&ndash;40 bps.</p>
+      <p style="margin-top:10px"><strong>Rolldown (10%) + Duration Timing (15%):</strong> Yield curve shape analysis for tactical duration positioning. +30&ndash;50 bps combined.</p>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card green">
       <div class="card-title">Short-Term Improvements</div>
-      <p><strong>Variable risk-free rate:</strong> Replacing the fixed 5% Rf with the DTB3 series from FRED would better reflect the actual rate environment. This is a ~10 line code change that would provide a more representative view of risk-adjusted metrics.</p>
-      <p style="margin-top:10px"><strong>Turnover reduction:</strong> Increasing the smoothing parameter or moving to weekly-only rebalancing would reduce annual turnover below 200% while preserving most of the signal value.</p>
+      <p><strong>Composite benchmark:</strong> Add a 60/40 blended benchmark (40% SPY + 20% XIU.TO + 25% AGG + 15% XBB.TO) to isolate factor alpha from asset allocation effects. The current S&amp;P 500 benchmark overstates crisis protection.</p>
+      <p style="margin-top:10px"><strong>Variable risk-free rate:</strong> Replacing the fixed 5% Rf with the DTB3 series from FRED would better reflect the actual rate environment (~10 line change).</p>
+      <p style="margin-top:10px"><strong>Dynamic liquidity constraints:</strong> Replace static $1M/day floor with ADV-based constraints (max 10&ndash;15% of 20-day ADV per position) using Bloomberg or Yahoo Finance volume data.</p>
       <p style="margin-top:10px"><strong>HMM/VIX redundancy analysis:</strong> Computing the Spearman correlation between the HMM and VIX signals would quantify potential redundancy and inform better weight calibration.</p>
     </div>
     <div class="card navy">
       <div class="card-title">Strategic Enhancements</div>
-      <p><strong>Alternative safe havens:</strong> Adding gold or commodity ETFs as defensive assets would address the 2022 limitation where bonds and equities fell simultaneously. Real assets can serve as a hedge when traditional diversification breaks down.</p>
-      <p style="margin-top:10px"><strong>Long-short extension:</strong> If the mandate permits, adding a short book would approximately double the strategy's Sharpe ratio, based on academic benchmarks for factor strategies.</p>
-      <p style="margin-top:10px"><strong>Granular ESG integration:</strong> Replacing the current sector-level proxy with security-level Sustainalytics ratings would provide meaningful ESG differentiation rather than a decorative tilt.</p>
+      <p><strong>Survivorship bias correction:</strong> Integrate CRSP delisted tickers via WRDS to reconstruct the historical S&amp;P 500 universe at each rebalancing date.</p>
+      <p style="margin-top:10px"><strong>Alternative safe havens:</strong> Adding gold or commodity ETFs (GLD, IAU, DJP) as defensive assets would address the 2022 limitation where bonds and equities fell simultaneously.</p>
+      <p style="margin-top:10px"><strong>Granular ESG integration:</strong> Replacing the current sector-level proxy with security-level Sustainalytics ratings via Bloomberg would provide meaningful ESG differentiation.</p>
+      <p style="margin-top:10px"><strong>Long-short extension:</strong> If the mandate permits, adding a short book would approximately double the strategy&rsquo;s Sharpe ratio, based on academic benchmarks for factor strategies.</p>
     </div>
   </div>
 
@@ -534,15 +552,19 @@ tr:hover td { background: rgba(255,255,255,0.02); }
     <div class="card-title">Known Limitations</div>
     <p style="margin-bottom:8px;">The following limitations are documented and quantified, not discovered post-hoc:</p>
     <p><strong>Positive equity-bond correlation (2022):</strong> When both asset classes fall together, the defensive rotation toward bonds becomes counterproductive. The portfolio lost -12.1% vs. -8.0% for a static allocation during this period. This is a structural limitation of any risk-on/risk-off framework.</p>
-    <p style="margin-top:8px"><strong>Survivorship bias:</strong> The universe includes 21 historical tickers, but hundreds of delisted securities are missing from the S&P 500 backtest sample.</p>
+    <p style="margin-top:8px"><strong>Benchmark selection:</strong> The current S&amp;P 500 benchmark does not reflect the portfolio&rsquo;s 25&ndash;40% bond allocation, overstating crisis alpha and understating bull-market performance.</p>
+    <p style="margin-top:8px"><strong>Survivorship bias:</strong> The universe includes 21 historical tickers, but hundreds of delisted securities are missing from the S&amp;P 500 backtest sample.</p>
+    <p style="margin-top:8px"><strong>ESG integration:</strong> The current sector-level ESG tilt provides limited differentiation within sectors. Security-level Sustainalytics scores would be more meaningful.</p>
     <p style="margin-top:8px"><strong>Factor decay risk:</strong> McLean &amp; Pontiff (2016) document a 26% average decline in factor premia after academic publication. Diversification across six low-correlation factors mitigates but does not eliminate this risk.</p>
   </div>
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  <p>GSF-3120 &mdash; Quantitative Finance Seminar &mdash; Universite Laval, Winter 2026</p>
+  <p>Laurie Fiset &mdash; BSc Quantitative Finance &mdash; Universit&eacute; Laval</p>
+  <p style="margin-top:4px">GSF-3120 &mdash; Quantitative Finance Seminar &mdash; Winter 2026</p>
   <p style="margin-top:4px">Built with Python, cvxpy, hmmlearn, and Compustat/WRDS data.</p>
+  <p style="margin-top:8px; font-size:11px; color:var(--text-muted);">Wharton Research Data Services (WRDS) was used in preparing this research project.</p>
 </div>
 
 </div>
